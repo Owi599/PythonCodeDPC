@@ -13,3 +13,4 @@ A = mat([[1, 0, 0],[0, 1, alpha1],[0, alpha2, 1]])
 inversed = A.inv()
 
 print(inversed)
+ 
