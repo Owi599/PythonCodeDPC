@@ -122,10 +122,9 @@ eq3 = sp.simplify(eq3)
 sol = sp.solve([eq1,eq2,eq3],[ddxc,ddtheta1,ddtheta2],simplify=False,rational=False)
 
 #substitute values
-# Substitute the solution for ddxc, ddtheta1, ddtheta2 into the lambdify functions
-dzcdt_f = sp.lambdify((g, m1, m2, mc, l1, l2, xc, dxc, theta1, dtheta1, theta2, dtheta2, F), sol[ddxc].subs([(xc, xc(t)), (dxc, dxc(t)), (theta1, theta1(t)), (dtheta1, dtheta1(t)), (theta2, theta2(t)), (dtheta2, dtheta2(t))]))
-dz1dt_f = sp.lambdify((g, m1, m2, mc, l1, l2, xc, dxc, theta1, dtheta1, theta2, dtheta2, F), sol[ddtheta1].subs([(xc, xc(t)), (dxc, dxc(t)), (theta1, theta1(t)), (dtheta1, dtheta1(t)), (theta2, theta2(t)), (dtheta2, dtheta2(t))]))
-dz2dt_f = sp.lambdify((g, m1, m2, mc, l1, l2, xc, dxc, theta1, dtheta1, theta2, dtheta2, F), sol[ddtheta2].subs([(xc, xc(t)), (dxc, dxc(t)), (theta1, theta1(t)), (dtheta1, dtheta1(t)), (theta2, theta2(t)), (dtheta2, dtheta2(t))]))
+dzcdt_f = sp.lambdify((g,m1,m2,mc,l1,l2,xc,dxc,theta1,dtheta1,theta2,dtheta2,F),sol[ddxc])
+dz1dt_f = sp.lambdify((g,m1,m2,mc,l1,l2,xc,dxc,theta1,dtheta1,theta2,dtheta2,F),sol[ddtheta1])
+dz2dt_f = sp.lambdify((g,m1,m2,mc,l1,l2,xc,dxc,theta1,dtheta1,theta2,dtheta2,F),sol[ddtheta2])
 dxcdt_f = sp.lambdify(dxc,dxc)
 dtheta1dt_f = sp.lambdify(dtheta1,dtheta1)
 dtheta2dt_f = sp.lambdify(dtheta2,dtheta2)
