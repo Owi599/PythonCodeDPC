@@ -1,36 +1,35 @@
-#Theodore Bounds
 #Inverted Double Pendulum Control Optimization
-#Adapted from code by Everton Colling
-import math
-import matplotlib
+
+import math # python math library
+import matplotlib # pythom plotting library
 
 matplotlib.use("TkAgg")
-import matplotlib.animation as animation
-import numpy as np
-from gekko import GEKKO
+import matplotlib.animation as animation # python animation library
+import numpy as np # python array manipulation library
+from gekko import GEKKO #a Python library for machine learning and optimization
 
 #Defining a model
-m = GEKKO(remote=True)
+m = GEKKO(remote=False)
 
 #################################
 #Define initial and final conditions and limits
-pi = math.pi;
-x0 = 0; xdot0 = 0
-q10 = pi; q1dot0 = 0 #0=vertical, pi=inverted
-q20 = pi; q2dot0 = 0 #0=vertical, pi=inverted
-xf = 0; xdotf = 0
-q1f = 0; q1dotf = 0
-q2f = 0; q2dotf = 0
-xmin = -0.225; xmax = 0.225
-umin = -10; umax = 10
+pi = math.pi; # define pi
+x0 = 0; xdot0 = 0 # inital Cart postition and velocity
+q10 = pi; q1dot0 = 0 #0=vertical, pi=inverted #initial link 1 angle and angular velocity
+q20 = pi; q2dot0 = 0 #0=vertical, pi=inverted #initial link 2 angle and angular velocity
+xf = 0; xdotf = 0 # final Cart postition and velocity
+q1f = 0; q1dotf = 0 #final link 1 angle and angular velocity
+q2f = 0; q2dotf = 0 #final link 2 angle and angular velocity
+xmin = -0.45; xmax = 0.45 #cart position limits
+umin = -15; umax = 15 #force limits
 
 #Defining the time parameter (0, 1)
-N = 100
-t = np.linspace(0,1,N)
-m.time = t
+N = 100 # number of time points
+t = np.linspace(0,1,N) # time
+m.time = t # Gekko time
 
 #Final time
-TF = m.FV(12,lb=2,ub=25); TF.STATUS = 1
+TF = m.FV(12,lb=2,ub=25); TF.STATUS = 1 
 end_loc = len(m.time)-1
 final = np.zeros(len(m.time))
 for i in range(N):
@@ -41,22 +40,22 @@ for i in range(N):
 final = m.Param(value=final)
 
 #Parameters
-mc = m.Param(value=1) #cart mass
-m1 = m.Param(value=.3) #link 1 mass
-m2 = m.Param(value=.2) #link 2 mass
-L1 = m.Param(value=.5) #link 1 length
-LC1 = m.Param(value=.25)  #link 1 CM pos
-L2 = m.Param(value=.5) #link 1 length
-LC2 = m.Param(value=.25) #link 1 CM pos
-I1 = m.Param(value=.01) #link 1 MOI
-I2 = m.Param(value=.01) #link 2 MOI
-g = m.Const(value=9.81) #gravity
-Bc = m.Const(value=.5) #cart friction
-B1 = m.Const(value=.001) #link 1 friction
-B2 = m.Const(value=.001) #link 2 friction
+mc  = m.Param(value=1.2)  #cart mass
+m1  = m.Param(value=.5)   #link 1 mass
+m2  = m.Param(value=.3)   #link 2 mass
+L1  = m.Param(value=.3)   #link 1 length
+LC1 = m.Param(value=.3)   #link 1 Center Mass pos
+L2  = m.Param(value=.3)   #link 1 length
+LC2 = m.Param(value=.15)   #link 1 Center Mass pos
+I1  = m.Param(value=.01)  #link 1 Moment of Inertia
+I2  = m.Param(value=.01)  #link 2 Moment of Inertia
+g   = m.Const(value=9.81) #gravity
+Bc  = m.Const(value=.5)   #cart friction
+B1  = m.Const(value=.001) #link 1 friction
+B2  = m.Const(value=.001) #link 2 friction
 
 
-#MV
+#Manipulative Variable 
 u = m.MV(lb=umin,ub=umax); u.STATUS = 1
 
 #State Variables
@@ -108,7 +107,7 @@ m.Obj(final*(q2dot-q2dotf)**2)
 m.Obj(TF)
 
 m.options.IMODE = 6 #MPC
-m.options.SOLVER = 3 #IPOPT
+m.options.SOLVER = 3 #IPOPT (Internal Point Optimizer)
 m.solve()
 
 m.time = np.multiply(TF, m.time)
@@ -131,26 +130,26 @@ ax5 = fig2.add_subplot(324)
 ax6 = fig2.add_subplot(325)
 ax7 = fig2.add_subplot(326)
 
-ax1.plot(m.time,u.value,'m',lw=2)
-ax1.legend([r'$u$'],loc=1)
+ax1.plot(m.time,u.value,'b',lw=1.5)
+ax1.legend([r'$u$'],loc='best')
 ax1.set_title('Control Input')
 ax1.set_ylabel('Force (N)')
 ax1.set_xlabel('Time (s)')
 ax1.set_xlim(m.time[0],m.time[-1])
 ax1.grid(True)
 
-ax2.plot(m.time,x.value,'r',lw=2)
+ax2.plot(m.time,x.value,'r',lw=1.5)
 ax2.set_ylabel('Position (m)')
 ax2.set_xlabel('Time (s)')
-ax2.legend([r'$x$'],loc='upper left')
+ax2.legend([r'$x$'],loc='best')
 ax2.set_xlim(m.time[0],m.time[-1])
 ax2.grid(True)
 ax2.set_title('Cart Position')
 
-ax3.plot(m.time,xdot.value,'g',lw=2)
+ax3.plot(m.time,xdot.value,'g',lw=1.5)
 ax3.set_ylabel('Velocity (m/s)')
 ax3.set_xlabel('Time (s)')
-ax3.legend([r'$xdot$'],loc='upper left')
+ax3.legend([r'$xdot$'],loc='best')
 ax3.set_xlim(m.time[0],m.time[-1])
 ax3.grid(True)
 ax3.set_title('Cart Velocity')
@@ -160,34 +159,34 @@ for i in range(N):
     q1alt[i] = q1.value[i] + math.pi/2
     q2alt[i] = q2.value[i] + math.pi/2
 
-ax4.plot(m.time,q1alt,'r',lw=2)
+ax4.plot(m.time,q1alt,'r',lw=1.5)
 ax4.set_ylabel('Angle (Rad)')
 ax4.set_xlabel('Time (s)')
-ax4.legend([r'$q1$'],loc='upper left')
+ax4.legend([r'$q1$'],loc='best')
 ax4.set_xlim(m.time[0],m.time[-1])
 ax4.grid(True)
 ax4.set_title('Link 1 Position')
 
-ax5.plot(m.time,q1dot.value,'g',lw=2)
+ax5.plot(m.time,q1dot.value,'g',lw=1.5)
 ax5.set_ylabel('Angular Velocity (Rad/s)')
 ax5.set_xlabel('Time (s)')
-ax5.legend([r'$q1dot$'],loc='upper right')
+ax5.legend([r'$q1dot$'],loc='best')
 ax5.set_xlim(m.time[0],m.time[-1])
 ax5.grid(True)
 ax5.set_title('Link 1 Velocity')
 
-ax6.plot(m.time,q2alt,'r',lw=2)
+ax6.plot(m.time,q2alt,'r',lw=1.5)
 ax6.set_ylabel('Angle (Rad)')
 ax6.set_xlabel('Time (s)')
-ax6.legend([r'$q2$'],loc='upper left')
+ax6.legend([r'$q2$'],loc='best')
 ax6.set_xlim(m.time[0],m.time[-1])
 ax6.grid(True)
 ax6.set_title('Link 2 Position')
 
-ax7.plot(m.time,q2dot.value,'g',lw=2)
+ax7.plot(m.time,q2dot.value,'g',lw=1.5)
 ax7.set_ylabel('Angular Velocity (Rad/s)')
 ax7.set_xlabel('Time (s)')
-ax7.legend([r'$q2dot$'],loc='upper right')
+ax7.legend([r'$q2dot$'],loc='best')
 ax7.set_xlim(m.time[0],m.time[-1])
 ax7.grid(True)
 ax7.set_title('Link 2 Velocity')
@@ -209,21 +208,21 @@ y3b = (1.05*L2.value[0])*np.cos(q2.value)+y2
 
 fig = plt.figure(figsize=(8,6.4))
 ax = fig.add_subplot(111,autoscale_on=False,\
-                      xlim=(-2.5,2.5),ylim=(-1.25,1.25))
+                      xlim=(-1,1),ylim=(-1.25,1.25))
 ax.set_xlabel('position')
 ax.get_yaxis().set_visible(False)
 
-crane_rail, = ax.plot([-2.5,2.5],[-0.2,-0.2],'k-',lw=4)
-start, = ax.plot([-1.5,-1.5],[-1.5,1.5],'k:',lw=2)
-objective, = ax.plot([1.5,1.5],[-1.5,1.5],'k:',lw=2)
+crane_rail, = ax.plot([-1,1],[-0.18,-0.18],'k-',lw=2.5)
+start, = ax.plot([-0.5,-0.5],[-1.5,1.5],'k:',lw=2)
+objective, = ax.plot([0.5,0.5],[-1.5,1.5],'k:',lw=2)
 mass1, = ax.plot([],[],linestyle='None',marker='s',\
-                  markersize=40,markeredgecolor='k',\
+                  markersize=20,markeredgecolor='k',\
                   color='orange',markeredgewidth=2)
 mass2, = ax.plot([],[],linestyle='None',marker='o',\
-                  markersize=20,markeredgecolor='k',\
+                  markersize=15,markeredgecolor='k',\
                   color='orange',markeredgewidth=2)
 mass3, = ax.plot([],[],linestyle='None',marker='o',\
-                  markersize=20,markeredgecolor='k',\
+                  markersize=15,markeredgecolor='k',\
                   color='orange',markeredgewidth=2)
 line12, = ax.plot([],[],'o-',color='black',lw=4,\
                  markersize=6,markeredgecolor='k',\
@@ -236,6 +235,8 @@ time_template = 'time = %.1fs'
 time_text = ax.text(0.05,0.9,'',transform=ax.transAxes)
 #start_text = ax.text(-1.1,-0.3,'start',ha='right')
 #end_text = ax.text(1.0,-0.3,'end',ha='left')
+
+
 
 def init():
      mass1.set_data([],[])
