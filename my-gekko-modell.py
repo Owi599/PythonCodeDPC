@@ -21,10 +21,10 @@ xf = 0; xdotf = 0 # final Cart postition and velocity
 q1f = 0; q1dotf = 0 #final link 1 angle and angular velocity
 q2f = 0; q2dotf = 0 #final link 2 angle and angular velocity
 xmin = -0.45; xmax = 0.45 #cart position limits
-umin = -15; umax = 15 #force limits
+umin = -100; umax = 100 #force limits
 
 #Defining the time parameter (0, 1)
-N = 100 # number of time points
+N = 160 # number of time points
 t = np.linspace(0,1,N) # time
 m.time = t # Gekko time
 
@@ -46,7 +46,7 @@ m2  = m.Param(value=.3)   #link 2 mass
 L1  = m.Param(value=.3)   #link 1 length
 LC1 = m.Param(value=.3)   #link 1 Center Mass pos
 L2  = m.Param(value=.3)   #link 1 length
-LC2 = m.Param(value=.15)   #link 1 Center Mass pos
+LC2 = m.Param(value=.3)   #link 1 Center Mass pos
 I1  = m.Param(value=.01)  #link 1 Moment of Inertia
 I2  = m.Param(value=.01)  #link 2 Moment of Inertia
 g   = m.Const(value=9.81) #gravity
@@ -96,6 +96,7 @@ m.Equation(x.dt()/TF == xdot)
 m.Equation(q1.dt()/TF == q1dot)
 m.Equation(q2.dt()/TF == q2dot)
 
+#Objective Function
 m.Obj(final*(x-xf)**2)
 m.Obj(final*(xdot-xdotf)**2)
 m.Obj(final*(q1-q1f)**2)
@@ -106,7 +107,7 @@ m.Obj(final*(q2dot-q2dotf)**2)
 #Try to minimize final time
 m.Obj(TF)
 
-m.options.IMODE = 6 #MPC
+m.options.IMODE = 6 #MPC (Model Predictive Control)
 m.options.SOLVER = 3 #IPOPT (Internal Point Optimizer)
 m.solve()
 
@@ -260,7 +261,7 @@ ani_a = animation.FuncAnimation(fig, animate, \
          np.arange(len(m.time)), \
          interval=40,init_func=init) #blit=False,
 
-ani_a.save('Pendulum_Swing_Up.mp4',fps=30)
+ani_a.save('Pendulum_Swing_Up.mp4',fps=50)
 
 plt.show()
 
