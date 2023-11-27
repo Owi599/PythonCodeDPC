@@ -13,20 +13,20 @@ m = GEKKO(remote=False)
 
 #################################
 #Define initial and final conditions and limits
-pi = math.pi; # define pi
-x0 = 0; xdot0 = 0 # inital Cart postition and velocity
-q10 = pi; q1dot0 = 0 #0=vertical, pi=inverted #initial link 1 angle and angular velocity
-q20 = pi; q2dot0 = 0 #0=vertical, pi=inverted #initial link 2 angle and angular velocity
-xf = 0; xdotf = 0 # final Cart postition and velocity
-q1f = 0; q1dotf = 0 #final link 1 angle and angular velocity
-q2f = 0; q2dotf = 0 #final link 2 angle and angular velocity
-xmin = -0.45; xmax = 0.45 #cart position limits
-umin = -100; umax = 100 #force limits
+pi = math.pi;                 #define pi
+x0 = 0; xdot0 = 0             #inital Cart postition and velocity
+q10 = pi; q1dot0 = 0          #0=vertical, pi=inverted #initial link 1 angle and angular velocity
+q20 = pi; q2dot0 = 0          #0=vertical, pi=inverted #initial link 2 angle and angular velocity
+xf = 0; xdotf = 0             #final Cart postition and velocity
+q1f = 0; q1dotf = 0           #final link 1 angle and angular velocity
+q2f = 0; q2dotf = 0           #final link 2 angle and angular velocity
+xmin = -0.45; xmax = 0.45     #cart position limits
+umin = -100; umax = 100       #force limits
 
 #Defining the time parameter (0, 1)
-N = 160 # number of time points
-t = np.linspace(0,1,N) # time
-m.time = t # Gekko time
+N = 160                 # number of time points
+t = np.linspace(0,1,N)  # time
+m.time = t              # Gekko time
 
 #Final time
 TF = m.FV(12,lb=2,ub=25); TF.STATUS = 1 
