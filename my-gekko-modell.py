@@ -20,8 +20,8 @@ q20 = pi; q2dot0 = 0          #0=vertical, pi=inverted #initial link 2 angle and
 xf = 0; xdotf = 0             #final Cart postition and velocity
 q1f = 0; q1dotf = 0           #final link 1 angle and angular velocity
 q2f = 0; q2dotf = 0           #final link 2 angle and angular velocity
-xmin = -0.45; xmax = 0.45     #cart position limits
-umin = -100; umax = 100       #force limits
+xmin = -0.40; xmax = 0.40    #cart position limits
+umin = -50; umax = 50       #force limits
 
 #Defining the time parameter (0, 1)
 N = 160                 # number of time points
@@ -90,6 +90,7 @@ CDQ = C@DQ
 b = np.array([xdot.dt()/TF, q1dot.dt()/TF, q2dot.dt()/TF])
 Mb = M@b
 
+
 #Defining the State Space Model
 m.Equations([(Mb[i] == U[i] - CDQ[i] - G[i]) for i in range(3)])
 m.Equation(x.dt()/TF == xdot)
@@ -103,7 +104,7 @@ m.Obj(final*(q1-q1f)**2)
 m.Obj(final*(q1dot-q1dotf)**2)
 m.Obj(final*(q2-q2f)**2)
 m.Obj(final*(q2dot-q2dotf)**2)
-
+m.Obj(final*(u)**2)
 #Try to minimize final time
 m.Obj(TF)
 
