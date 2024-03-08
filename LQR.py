@@ -1,6 +1,54 @@
 import numpy as np
 import control as ct
 import matplotlib.pyplot as plt
+from scipy.linalg import solve_continuous_are
+import socket
+
+# define UDP server
+UDP_IP = "192.168.2.106"
+UDP_PORT_RECV_ALPHA = 890
+UDP_PORT_RECV_BETA = 892
+UDP_PORT_RECV_X = 893
+UDP_PORT_SEND = 891
+sock_recv_a = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+sock_recv_b = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+sock_recv_x = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+sock_send = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+
+def UDP_Angle_Alpha():
+    while True:
+        sock_recv_a.bind((UDP_IP, UDP_PORT_RECV_ALPHA))
+        data, addr = sock_recv_a.recvfrom(1024)  # buffer size is 1024 bytes
+        return data.decode()
+
+
+def UDP_Angle_Beta():
+    while True:
+        sock_recv_b.bind((UDP_IP, UDP_PORT_RECV_BETA))
+        data, addr = sock_recv_b.recvfrom(1024)  # buffer size is 1024 bytes
+        return data.decode()
+
+
+def UDP_Cart_Position():
+    while True:
+        sock_recv_x.bind((UDP_IP, UDP_PORT_RECV_X))
+        data, addr = sock_recv_x.recvfrom(1024)  # buffer size is 1024 bytes
+        return data.decode()
+
+
+def UDP_send_data(data):
+    sock_send.sendto(data.encode(), (UDP_IP, UDP_PORT_SEND))
+
+
+A = UDP_Angle_Alpha()
+B = UDP_Angle_Beta()
+C = UDP_Cart_Position()
+
+# convert strings to float values and split
+A = float(A)
+B = float(B)
+C = float(C)
 
 
 # Parameter defintion
@@ -19,7 +67,7 @@ Bc = 0.5
 B1 = 0.001
 B2 = 0.001
 
-x0 = np.array([[0.0], [pi], [pi], [0.0], [0.0], [0.0]])  # initial state Vector
+x0 = np.array([[C], [A], [B], [0.0], [0.0], [0.0]])  # initial state Vector
 
 # Intermediates
 h1 = mc + m1 + m2
@@ -63,7 +111,7 @@ Rank = np.linalg.matrix_rank(Ctrl)
 
 Q = np.array(
     [
-        [1, 0, 0, 0, 0, 0],
+        [3000, 0, 0, 0, 0, 0],
         [0, 1, 0, 0, 0, 0],
         [0, 0, 1, 0, 0, 0],
         [0, 0, 0, 1, 0, 0],
@@ -71,30 +119,43 @@ Q = np.array(
         [0, 0, 0, 0, 0, 1],
     ]
 )
-R = 0.5
-K, S, E = ct.lqr(A, B, Q, R)
-BK = B @ K
-sys = ct.ss((A - BK), B, C, D)
+R = np.array([[10]])
 
-t = np.arange(0, 30, 0.005)
-t, y, x = ct.initial_response(sys, T=t, X0=x0, return_x=True)
+P = solve_continuous_are(A, B, Q, R)
+K = np.linalg.inv(R) @ B.T @ P
 
-# Plot results
-plt.figure()
-plt.xlabel("t in s")
-plt.ylabel("x in m / theta in rad")
-plt.plot(t, x[1], "b--", label="theta_1")
-plt.plot(t, x[2], "r:", label="theta_2")
-plt.plot(t, x[0], "g", label="x")
-plt.legend(loc="best")
-plt.grid(True)
 
-plt.figure()
-plt.xlabel("t in s")
-plt.ylabel("x_dot in m/s / theta_dot in rad/s")
-plt.plot(t, x[4], "b--", label="theta_1_dot")
-plt.plot(t, x[5], "r:", label="theta_2_dot")
-plt.plot(t, x[3], "g", label="x_dot")
-plt.legend(loc="best")
-plt.grid(True)
-plt.show()
+def lqr_contol(x):
+    while True:
+        return np.clip(-K @ x, -5, 5)
+
+
+u = lqr_contol(x0)
+print(u)
+
+# K, S, E = ct.lqr(A, B, Q, R)
+# BK = B @ K
+# sys = ct.ss((A - BK), B, C, D)
+
+# t = np.arange(0, 30, 0.005)
+# t, y, x = ct.initial_response(sys, T=t, X0=x0, return_x=True)
+
+# # Plot results
+# plt.figure()
+# plt.xlabel("t in s")
+# plt.ylabel("x in m / theta in rad")
+# plt.plot(t, x[1], "b--", label="theta_1")
+# plt.plot(t, x[2], "r:", label="theta_2")
+# plt.plot(t, x[0], "g", label="x")
+# plt.legend(loc="best")
+# plt.grid(True)
+
+# plt.figure()
+# plt.xlabel("t in s")
+# plt.ylabel("x_dot in m/s / theta_dot in rad/s")
+# plt.plot(t, x[4], "b--", label="theta_1_dot")
+# plt.plot(t, x[5], "r:", label="theta_2_dot")
+# plt.plot(t, x[3], "g", label="x_dot")
+# plt.legend(loc="best")
+# plt.grid(True)
+# plt.show()

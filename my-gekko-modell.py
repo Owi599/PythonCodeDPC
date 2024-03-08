@@ -33,7 +33,7 @@ pi = math.pi
 # define pi
 x0 = 0
 xdot0 = 0  # inital Cart postition and velocity
-q10 = UDP_get_data()  # initial angle of the first pendul
+q10 = pi  # initial angle of the first pendul
 q1dot0 = 0  # 0=vertical, pi=inverted #initial link 1 angle and angular velocity
 q20 = pi
 q2dot0 = 0  # 0=vertical, pi=inverted #initial link 2 angle and angular velocity
