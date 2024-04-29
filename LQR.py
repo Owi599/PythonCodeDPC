@@ -3,15 +3,16 @@ import control as ct
 import matplotlib.pyplot as plt
 from scipy.linalg import solve_continuous_are
 import time
-from udp import UDP
+from com import COM
 
 # define UDP server
-UDP_IP = "10.0.3.40"
-UDP_PI = "10.0.3.55"
+ETH_IP = "10.0.3.40"
+ETH_IP_PI = "10.0.3.55"
 UDP_PORT_RECV_ALPHA = 890
 UDP_PORT_RECV_BETA = 892
 UDP_PORT_RECV_X = 893
 UDP_PORT_SEND = 5000
+UDP = 1
 
 # Parameter defintion
 pi = np.pi
@@ -39,18 +40,18 @@ h6 = m2 * LC2**2 + I2
 h7 = m1 * LC1 * g + m2 * L1 * g
 h8 = m2 * LC2 * g
 
-udpA = UDP(UDP_IP, UDP_PORT_RECV_ALPHA)
-udpB = UDP(UDP_IP, UDP_PORT_RECV_BETA)
-udpX = UDP(UDP_IP, UDP_PORT_RECV_X)
+udpA = COM(ETH_IP, UDP_PORT_RECV_ALPHA,UDP)
+# udpB = COM(ETH_IP, UDP_PORT_RECV_BETA,UDP)
+# udpX = COM(ETH_IP, UDP_PORT_RECV_X,UDP)
 
 
-Alpha = udpA.Rec_Message()[0]
-Beta = udpB.Rec_Message()[0]
-x = udpX.Rec_Message()[0]
 
-udpSend = UDP(UDP_PI,UDP_PORT_SEND)
+    
+# Beta = udpB.Rec_Message()
+# x = udpX.Rec_Message()
 
-x0 = np.array([[Alpha], [Beta], [x], [0], [0], [0]])
+udpSend = COM(ETH_IP_PI,UDP_PORT_SEND,UDP)
+
 
 # Dynamics
 M = np.array(
@@ -90,19 +91,30 @@ Q = np.array(
         [0, 0, 0, 0, 0, 1],
     ]
 )
-R = np.array([[100]])
+R = np.array([[10]])
 
 P = solve_continuous_are(A, B, Q, R)
 K = np.linalg.inv(R) @ B.T @ P
 
 
 def lqr_contol(x):
-    return np.clip(-K @ x, -5, 5)
+    return np.clip(-K @ x, -20, 20)
 
-
-u = lqr_contol(x0)
-
-print(u[0][0])
-
-udpSend.Send_Message(float(u[0][0]))
-
+Beta = pi
+while True:
+    try:
+        Beta = Beta + 0.2
+        if Beta > 2*np.pi:
+            Beta = Beta - 2*np.pi
+        Alpha = float(udpA.Rec_Message())
+        if Alpha < 0:
+                Alpha = Alpha + 2*np.pi
+        
+        x0 = np.array([[Alpha], [Beta], [0], [0], [0], [0]])  
+        time.sleep(0.001) 
+        u = lqr_contol(x0)
+        print(u[0][0])
+        udpSend.Send_Message(float(u[0][0]))
+    except KeyboardInterrupt:
+        break
+    
