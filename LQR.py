@@ -28,9 +28,7 @@ LC2 = 0.3
 I1 = m1 * LC1**2
 I2 = m2 * LC2**2
 g = 9.81
-Bc = 0.5
-B1 = 0.001
-B2 = 0.001
+
 
 # Intermediates
 h1 = mc + m1 + m2

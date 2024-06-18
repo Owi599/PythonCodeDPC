@@ -12,6 +12,7 @@ ETH_IP_PI = "10.0.8.55"
 FIVEG_IP = "10.0.3.55"
 FIVEG_IP_PI = "10.0.5.13"
 UDP_PORT_RECV_ALPHA = 890
+UDP_PORT_RECV_ALPHA_DOT = 990
 UDP_PORT_RECV_BETA = 892
 UDP_PORT_RECV_X = 893
 UDP_PORT_SEND = 5000
@@ -25,8 +26,7 @@ L1 = 0.3
 LC1 = 0.3
 I1 = m1 * LC1**2
 g = 9.81
-Bc = 0.5
-B1 = 0.001
+
 
 # Intermediates
 h1 = mc + m1 
@@ -35,14 +35,13 @@ h3 =  m1 * L1**2 + I1
 h4 = m1 * LC1 * g
 
 udpA = COM(ETH_IP, UDP_PORT_RECV_ALPHA,UDP)
-# udpB = COM(ETH_IP, UDP_PORT_RECV_BETA,UDP)
-# udpX = COM(ETH_IP, UDP_PORT_RECV_X,UDP)
+udpAdot = COM(ETH_IP, UDP_PORT_RECV_ALPHA_DOT,UDP)
+
+udpX = COM(ETH_IP, UDP_PORT_RECV_X,UDP)
 
 
 
     
-# Beta = udpB.Rec_Message()
-# x = udpX.Rec_Message()
 
 udpSend = COM(ETH_IP_PI,UDP_PORT_SEND,UDP)
 
@@ -91,15 +90,14 @@ def lqr_contol(x):
 while True:
     try:
         Alpha = float(udpA.Rec_Message())
-        X = random.uniform(-0.5,0.5)
-        # if Alpha < 0:
-        #         Alpha = Alpha + 2*np.pi
-        
-        x0 = np.array([[X], [Alpha], [0], [0]])  
-        time.sleep(0.001) 
+        #X = float(udpX.Rec_Message())
+        DotAlpha = float(udpAdot.Rec_Message())
+        print(Alpha)
+        x0 = np.array([[0], [Alpha], [0], [DotAlpha]])  
+        time.sleep(0.3) 
         u = lqr_contol(x0)
         print(u[0][0],'',)
-        udpSend.Send_Message(float(u[0][0]))
+        udpSend.Send_Message(u[0][0])
         
     except KeyboardInterrupt:
         break
