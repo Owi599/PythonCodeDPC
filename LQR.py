@@ -11,8 +11,11 @@ ETH_IP_PI = "10.0.8.55"
 FIVEG_IP = "10.0.3.55"
 FIVEG_IP_PI = "10.0.5.13"
 UDP_PORT_RECV_ALPHA = 890
+UDP_PORT_RECV_ALPHA_DOT = 990
 UDP_PORT_RECV_BETA = 892
+UDP_PORT_RECV_BETA_DOT = 992
 UDP_PORT_RECV_X = 893
+UDP_PORT_RECV_X_DOT = 993
 UDP_PORT_SEND = 5000
 UDP = 1
 
@@ -41,14 +44,11 @@ h7 = m1 * LC1 * g + m2 * L1 * g
 h8 = m2 * LC2 * g
 
 udpA = COM(ETH_IP, UDP_PORT_RECV_ALPHA,UDP)
-# udpB = COM(ETH_IP, UDP_PORT_RECV_BETA,UDP)
-# udpX = COM(ETH_IP, UDP_PORT_RECV_X,UDP)
-
-
-
-    
-# Beta = udpB.Rec_Message()
-# x = udpX.Rec_Message()
+udpAdot = COM(ETH_IP, UDP_PORT_RECV_ALPHA_DOT,UDP)
+udpB = COM(ETH_IP, UDP_PORT_RECV_BETA,UDP)
+udpBdot = COM(ETH_IP, UDP_PORT_RECV_BETA_DOT,UDP)
+udpX = COM(ETH_IP, UDP_PORT_RECV_X,UDP)
+udpXdot = COM(ETH_IP, UDP_PORT_RECV_X_DOT,UDP)
 
 udpSend = COM(ETH_IP_PI,UDP_PORT_SEND,UDP)
 
@@ -103,7 +103,12 @@ def lqr_contol(x):
 while True:
     try:
         Alpha = float(udpA.Rec_Message())
-        x0 = np.array([[0], [Alpha], [0], [0], [0], [0]])  
+        AlphaDot = float(udpAdot.Rec_Message())
+        Beta = float(udpB.Rec_Message())
+        BetaDot = float(udpBdot.Rec_Message())
+        X = float(udpX.Rec_Message())
+        XDot = float(udpXdot.Rec_Message())
+        x0 = np.array([[X], [Alpha], [Beta], [XDot], [AlphaDot], [BetaDot]])  
         time.sleep(0.001) 
         u = lqr_contol(x0)
         print(u[0][0])

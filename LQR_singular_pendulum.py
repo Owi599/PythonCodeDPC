@@ -15,6 +15,7 @@ UDP_PORT_RECV_ALPHA = 890
 UDP_PORT_RECV_ALPHA_DOT = 990
 UDP_PORT_RECV_BETA = 892
 UDP_PORT_RECV_X = 893
+UDP_PORT_RECV_X_DOT = 993
 UDP_PORT_SEND = 5000
 UDP = 1
 
@@ -38,6 +39,7 @@ udpA = COM(ETH_IP, UDP_PORT_RECV_ALPHA,UDP)
 udpAdot = COM(ETH_IP, UDP_PORT_RECV_ALPHA_DOT,UDP)
 
 udpX = COM(ETH_IP, UDP_PORT_RECV_X,UDP)
+udpXdot = COM(ETH_IP, UDP_PORT_RECV_X_DOT,UDP)
 
 
 
@@ -90,11 +92,11 @@ def lqr_contol(x):
 while True:
     try:
         Alpha = float(udpA.Rec_Message())
-        #X = float(udpX.Rec_Message())
+        X = float(udpX.Rec_Message())
         DotAlpha = float(udpAdot.Rec_Message())
-        print(Alpha)
-        x0 = np.array([[0], [Alpha], [0], [DotAlpha]])  
-        time.sleep(0.3) 
+        DotX = float(udpXdot.Rec_Message())
+        x0 = np.array([[X], [Alpha], [DotX], [DotAlpha]])  
+        print(x0)
         u = lqr_contol(x0)
         print(u[0][0],'',)
         udpSend.Send_Message(u[0][0])
