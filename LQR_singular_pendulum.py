@@ -98,8 +98,10 @@ while True:
         x0 = np.array([[X], [Alpha], [DotX], [DotAlpha]])  
         print(x0)
         u = lqr_contol(x0)
-        print(u[0][0],'',)
-        udpSend.Send_Message(u[0][0])
+        U = "{:.3f}".format(u[0][0])
+        print(U)
+        time.sleep(0.5)
+        udpSend.Send_Message(U)
         
     except KeyboardInterrupt:
         break

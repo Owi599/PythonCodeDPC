@@ -1,11 +1,11 @@
-import numpy as np
-import control as ct
-import matplotlib.pyplot as plt
-from scipy.linalg import solve_continuous_are
-import time
-from com import COM
+import numpy as np  # library for nummeric operations
+import control as ct # control library 
+import matplotlib.pyplot as plt # visualization library 
+from scipy.linalg import solve_continuous_are # linearization library 
+import time # time library
+from com import COM # importing self made class
 
-# define UDP server
+#  UDP server parameters
 ETH_IP = "10.0.8.40"
 ETH_IP_PI = "10.0.8.55"
 FIVEG_IP = "10.0.3.55"
@@ -19,17 +19,17 @@ UDP_PORT_RECV_X_DOT = 993
 UDP_PORT_SEND = 5000
 UDP = 1
 
-# Parameter defintion
+# Parameter defintion for pendel
 pi = np.pi
-mc = 0.232
-m1 = 0.127
-m2 = 0.127
-L1 = 0.3
-L2 = 0.3
+mc = 0.232 # cart mass
+m1 = 0.127 # mass of pendulum arm 1
+m2 = 0.127 # mass of pendulum arm 2
+L1 = 0.3   # length of first arm 
+L2 = 0.3   # length of second arm
 LC1 = 0.3
 LC2 = 0.3
-I1 = m1 * LC1**2
-I2 = m2 * LC2**2
+I1 = m1 * LC1**2 # moment of inertia 1
+I2 = m2 * LC2**2 # moment of inertia 2
 g = 9.81
 
 
@@ -43,6 +43,7 @@ h6 = m2 * LC2**2 + I2
 h7 = m1 * LC1 * g + m2 * L1 * g
 h8 = m2 * LC2 * g
 
+#Server and Clients defined as objects of class COM
 udpA = COM(ETH_IP, UDP_PORT_RECV_ALPHA,UDP)
 udpAdot = COM(ETH_IP, UDP_PORT_RECV_ALPHA_DOT,UDP)
 udpB = COM(ETH_IP, UDP_PORT_RECV_BETA,UDP)
@@ -76,11 +77,13 @@ N = np.array(
 )
 F = np.array([[0], [0], [0], [1], [0], [0]])
 
+# linearized System Matrices
 A = np.linalg.solve(M, N)
 B = np.linalg.solve(M, F)
 C = np.array([1, 0, 0, 0, 0, 0])
 D = 0
 
+#LQR Matrices
 Q = np.array(
     [
         [3000, 0, 0, 0, 0, 0],
@@ -100,6 +103,7 @@ K = np.linalg.inv(R) @ B.T @ P
 def lqr_contol(x):
     return np.clip(-K @ x, -20, 20)
 
+#Exuction loop
 while True:
     try:
         Alpha = float(udpA.Rec_Message())
