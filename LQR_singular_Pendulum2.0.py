@@ -18,6 +18,7 @@ UDP_PORT_RECV_X = 893
 UDP_PORT_RECV_X_DOT = 993
 UDP_PORT_SEND = 5000
 UDP = 1
+TCP = 2
 
 # Parameter defintion
 pi = np.pi
@@ -36,10 +37,7 @@ h3 =  m1 * L1**2 + I1
 h4 = m1 * LC1 * g
 
 udpA = COM(ETH_IP, UDP_PORT_RECV_ALPHA,UDP)
-udpAdot = COM(ETH_IP, UDP_PORT_RECV_ALPHA_DOT,UDP)
 
-udpX = COM(ETH_IP, UDP_PORT_RECV_X,UDP)
-udpXdot = COM(ETH_IP, UDP_PORT_RECV_X_DOT,UDP)
 
 
 
@@ -90,20 +88,20 @@ def lqr_contol(x):
     return np.clip(-K @ x, - 50,50)
 
 while True:
+    
     try:
-        Alpha = float(udpA.Rec_Message())
-        X = float(udpX.Rec_Message())
-        DotAlpha = float(udpAdot.Rec_Message())
-        DotX = float(udpXdot.Rec_Message())
-        x0 = np.array([[X], [Alpha], [DotX], [DotAlpha]])  
+        x0 = []
+        lst = udpA.Rec_Message().split(" ")
+        for element in lst:
+            x0.append(float(element))
         print(x0)
         u = lqr_contol(x0)
-        U = "{:.3f}".format(u[0][0])
-        print(U)
-        udpSend.Send_Message(U)
+        time.sleep(.05)
+        udpSend.Send_Message(u[0])
+        
         
     except KeyboardInterrupt:
-        break
+         break
     except Exception as e:
-        print("An error occurred:", str(e))
+         print("An error occurred:", str(e))
     
