@@ -3,7 +3,7 @@ import control as ct
 import matplotlib.pyplot as plt
 from scipy.linalg import solve_continuous_are
 import time
-from com import COM
+from com import UDP, TCP
 import random
 
 # define UDP server
@@ -11,13 +11,9 @@ ETH_IP = "10.0.8.40"
 ETH_IP_PI = "10.0.8.55"
 FIVEG_IP = "10.0.3.55"
 FIVEG_IP_PI = "10.0.5.13"
-UDP_PORT_RECV_ALPHA = 890
-UDP_PORT_RECV_ALPHA_DOT = 990
-UDP_PORT_RECV_BETA = 892
-UDP_PORT_RECV_X = 893
-UDP_PORT_RECV_X_DOT = 993
-UDP_PORT_SEND = 5000
-UDP = 1
+UDP_PORT_RECV_SENSORS = 890
+UDP_PORT_CTRL = 5000
+
 
 # Parameter defintion
 pi = np.pi
@@ -30,22 +26,15 @@ g = 9.81
 
 
 # Intermediates
-h1 = mc + m1 
-h2 = m1 * LC1 
-h3 =  m1 * L1**2 + I1
+h1 = mc + m1
+h2 = m1 * LC1
+h3 = m1 * L1**2 + I1
 h4 = m1 * LC1 * g
 
-udpA = COM(ETH_IP, UDP_PORT_RECV_ALPHA,UDP)
-udpAdot = COM(ETH_IP, UDP_PORT_RECV_ALPHA_DOT,UDP)
 
-udpX = COM(ETH_IP, UDP_PORT_RECV_X,UDP)
-udpXdot = COM(ETH_IP, UDP_PORT_RECV_X_DOT,UDP)
-
-
-
-    
-
-udpSend = COM(ETH_IP_PI,UDP_PORT_SEND,UDP)
+#Server and Clients defined as objects of class COM
+UDP_SENSORS = UDP(ETH_IP, UDP_PORT_RECV_SENSORS)
+UDP_CTRL = UDP(ETH_IP_PI, UDP_PORT_CTRL)
 
 
 # Dynamics
@@ -62,16 +51,18 @@ N = np.array(
         [0, 1, 0, 0],
         [0, 0, 1, 0],
         [0, 0, 0, 0],
-        [0, -h4,0, 0],
+        [0, -h4, 0, 0],
     ]
 )
-F = np.array([ [0], [0], [1], [0]])
+F = np.array([[0], [0], [1], [0]])
 
+# linearized System Matrices
 A = np.linalg.solve(M, N)
 B = np.linalg.solve(M, F)
 C = np.array([1, 0, 0, 0])
 D = 0
 
+#LQR Matrices
 Q = np.array(
     [
         [1000, 0, 0, 0],
@@ -87,23 +78,22 @@ K = np.linalg.inv(R) @ B.T @ P
 
 
 def lqr_contol(x):
-    return np.clip(-K @ x, - 50,50)
+    return np.clip(-K @ x, -50, 50)
 
+
+#Exuction loop
 while True:
     try:
-        Alpha = float(udpA.Rec_Message())
-        X = float(udpX.Rec_Message())
-        DotAlpha = float(udpAdot.Rec_Message())
-        DotX = float(udpXdot.Rec_Message())
-        x0 = np.array([[X], [Alpha], [DotX], [DotAlpha]])  
+        x0 = []
+        lst = UDP_SENSORS.Rec_Message().split(" ")
+        for element in lst:
+            x0.append(float(element))
         print(x0)
         u = lqr_contol(x0)
-        U = "{:.3f}".format(u[0][0])
-        print(U)
-        udpSend.Send_Message(U)
-        
+        time.sleep(0.05)
+        UDP_CTRL.Send_Message(u[0])
+
     except KeyboardInterrupt:
         break
     except Exception as e:
         print("An error occurred:", str(e))
-    

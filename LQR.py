@@ -3,21 +3,16 @@ import control as ct # control library
 import matplotlib.pyplot as plt # visualization library 
 from scipy.linalg import solve_continuous_are # linearization library 
 import time # time library
-from com import COM # importing self made class
+from com import UDP, TCP # importing self made class
 
 #  UDP server parameters
 ETH_IP = "10.0.8.40"
 ETH_IP_PI = "10.0.8.55"
 FIVEG_IP = "10.0.3.55"
 FIVEG_IP_PI = "10.0.5.13"
-UDP_PORT_RECV_ALPHA = 890
-UDP_PORT_RECV_ALPHA_DOT = 990
-UDP_PORT_RECV_BETA = 892
-UDP_PORT_RECV_BETA_DOT = 992
-UDP_PORT_RECV_X = 893
-UDP_PORT_RECV_X_DOT = 993
-UDP_PORT_SEND = 5000
-UDP = 1
+UDP_PORT_RECV_SENSORS = 890
+UDP_PORT_CTRL = 5000
+
 
 # Parameter defintion for pendel
 pi = np.pi
@@ -44,14 +39,8 @@ h7 = m1 * LC1 * g + m2 * L1 * g
 h8 = m2 * LC2 * g
 
 #Server and Clients defined as objects of class COM
-udpA = COM(ETH_IP, UDP_PORT_RECV_ALPHA,UDP)
-udpAdot = COM(ETH_IP, UDP_PORT_RECV_ALPHA_DOT,UDP)
-udpB = COM(ETH_IP, UDP_PORT_RECV_BETA,UDP)
-udpBdot = COM(ETH_IP, UDP_PORT_RECV_BETA_DOT,UDP)
-udpX = COM(ETH_IP, UDP_PORT_RECV_X,UDP)
-udpXdot = COM(ETH_IP, UDP_PORT_RECV_X_DOT,UDP)
-
-udpSend = COM(ETH_IP_PI,UDP_PORT_SEND,UDP)
+UDP_SENSORS = UDP(ETH_IP, UDP_PORT_RECV_SENSORS)
+UDP_CTRL = UDP(ETH_IP_PI, UDP_PORT_CTRL)
 
 
 # Dynamics
@@ -106,17 +95,17 @@ def lqr_contol(x):
 #Exuction loop
 while True:
     try:
-        Alpha = float(udpA.Rec_Message())
-        AlphaDot = float(udpAdot.Rec_Message())
-        Beta = float(udpB.Rec_Message())
-        BetaDot = float(udpBdot.Rec_Message())
-        X = float(udpX.Rec_Message())
-        XDot = float(udpXdot.Rec_Message())
-        x0 = np.array([[X], [Alpha], [Beta], [XDot], [AlphaDot], [BetaDot]])  
-        time.sleep(0.001) 
+        x0 = []
+        lst = UDP_SENSORS.Rec_Message().split(" ")
+        for element in lst:
+            x0.append(float(element))
+        print(x0)
         u = lqr_contol(x0)
-        print(u[0][0])
-        udpSend.Send_Message(float(u[0][0]))
+        time.sleep(0.05)
+        UDP_CTRL.Send_Message(u[0])
+
     except KeyboardInterrupt:
         break
+    except Exception as e:
+        print("An error occurred:", str(e))
     
