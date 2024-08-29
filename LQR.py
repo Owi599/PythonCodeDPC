@@ -102,7 +102,7 @@ while True:
         print(x0)
         u = lqr_contol(x0)
         time.sleep(0.05)
-        UDP_CTRL.Send_Message(u[0])
+        UDP_CTRL.Send_Message("{:.3f}".format(u[0]))
 
     except KeyboardInterrupt:
         break
