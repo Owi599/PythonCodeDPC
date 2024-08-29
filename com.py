@@ -23,7 +23,6 @@ class UDP:
         Addresspair = self.CreateServer().recvfrom(1024)
         data = Addresspair[0]
         Recv_Data = data.decode()
-        #self.CreateServer().close()
         return Recv_Data
 
     def Send_Message(self, data):
