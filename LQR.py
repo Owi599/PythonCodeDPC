@@ -16,16 +16,16 @@ UDP_PORT_CTRL = 5000
 
 # Parameter defintion for pendel
 pi = np.pi
-mc = 0.232 # cart mass
-m1 = 0.127 # mass of pendulum arm 1
-m2 = 0.127 # mass of pendulum arm 2
-L1 = 0.3   # length of first arm 
-L2 = 0.3   # length of second arm
-LC1 = 0.3
-LC2 = 0.3
-I1 = m1 * LC1**2 # moment of inertia 1
-I2 = m2 * LC2**2 # moment of inertia 2
-g = 9.81
+mc = 0.232 # cart mass in Kg
+m1 = 0.127 # mass of pendulum arm 1 in Kg
+m2 = 0.127 # mass of pendulum arm 2 in Kg
+L1 = 0.3   # length of first arm in m
+L2 = 0.3   # length of second arm in m
+LC1 = 0.3 # in m
+LC2 = 0.3 # in m
+I1 = m1 * LC1**2 # moment of inertia 1 in kg.m^2
+I2 = m2 * LC2**2 # moment of inertia 2 in kg.m^2
+g = 9.81 # in m/s^2
 
 
 # Intermediates
@@ -71,13 +71,15 @@ A = np.linalg.solve(M, N)
 B = np.linalg.solve(M, F)
 C = np.array([1, 0, 0, 0, 0, 0])
 D = 0
-
+D = 0
+ctrbl= ct.ctrb(A,B)
+print(np.linalg.matrix_rank(ctrbl))
 #LQR Matrices
 Q = np.array(
     [
-        [3000, 0, 0, 0, 0, 0],
-        [0, 1, 0, 0, 0, 0],
-        [0, 0, 1, 0, 0, 0],
+        [50, 0, 0, 0, 0, 0],
+        [0, 50, 0, 0, 0, 0],
+        [0, 0, 50, 0, 0, 0],
         [0, 0, 0, 1, 0, 0],
         [0, 0, 0, 0, 1, 0],
         [0, 0, 0, 0, 0, 1],
@@ -87,25 +89,38 @@ R = np.array([[10]])
 
 P = solve_continuous_are(A, B, Q, R)
 K = np.linalg.inv(R) @ B.T @ P
+A_cl = A - B @ K
 
+# Compute the eigenvalues of A_cl
+eigenvalues = np.linalg.eigvals(A_cl)
+
+# Find the dominant eigenvalue (the one with the smallest real part magnitude)
+dominant_eigenvalue = min(eigenvalues, key=lambda ev: abs(ev.real))
+
+# Calculate the time constant
+time_constant = 1 / abs(dominant_eigenvalue.real)
+
+#print(f"Eigenvalues: {eigenvalues}")
+#print(f"Dominant Eigenvalue: {dominant_eigenvalue}")
+print(f"Time Constant: {time_constant}")
 
 def lqr_contol(x):
     return np.clip(-K @ x, -20, 20)
 
-#Exuction loop
-while True:
-    try:
-        x0 = []
-        lst = UDP_SENSORS.Rec_Message().split(" ")
-        for element in lst:
-            x0.append(float(element))
-        print(x0)
-        u = lqr_contol(x0)
-        time.sleep(0.05)
-        UDP_CTRL.Send_Message("{:.3f}".format(u[0]))
+# #Exuction loop
+# while True:
+#     try:
+#         x0 = []
+#         lst = UDP_SENSORS.Rec_Message().split(" ")
+#         for element in lst:
+#             x0.append(float(element))
+#         print(x0)
+#         u = lqr_contol(x0)
+#         time.sleep(0.05)
+#         UDP_CTRL.Send_Message("{:.3f}".format(u[0]))
 
-    except KeyboardInterrupt:
-        break
-    except Exception as e:
-        print("An error occurred:", str(e))
+#     except KeyboardInterrupt:
+#         break
+#     except Exception as e:
+#         print("An error occurred:", str(e))
     

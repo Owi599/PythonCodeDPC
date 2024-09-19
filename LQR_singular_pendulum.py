@@ -48,10 +48,10 @@ M = np.array(
 )
 N = np.array(
     [
-        [0, 1, 0, 0],
         [0, 0, 1, 0],
+        [0, 0, 0, 1],
         [0, 0, 0, 0],
-        [0, -h4, 0, 0],
+        [0, h4, 0, 0],
     ]
 )
 F = np.array([[0], [0], [1], [0]])
@@ -62,23 +62,47 @@ B = np.linalg.solve(M, F)
 C = np.array([1, 0, 0, 0])
 D = 0
 
+# #test controllability
+ 
+# print(A,B)
+# ctrbl= ct.ctrb(A,B)
+# print(np.linalg.matrix_rank(ctrbl))
+
 #LQR Matrices
 Q = np.array(
     [
-        [1000, 0, 0, 0],
-        [0, 1, 0, 0],
+        [1500, 0, 0, 0],
+        [0, 1500, 0, 0],
         [0, 0, 1, 0],
         [0, 0, 0, 1],
     ]
 )
-R = np.array([[20]])
+R = np.array([[10]])
 
 P = solve_continuous_are(A, B, Q, R)
 K = np.linalg.inv(R) @ B.T @ P
 
+# # calculate time constant
+
+A_cl = A - B @ K
+
+
+#eigenvalues of A_cl
+eigenvalues = np.linalg.eigvals(A_cl)
+
+#  dominant eigenvalue (the one with the smallest real part magnitude)
+dominant_eigenvalue = min(eigenvalues, key=lambda ev: abs(ev.real))
+
+# Calculate the time constant
+time_constant = 1 / abs(dominant_eigenvalue.real)
+
+#print(f"Eigenvalues: {eigenvalues}")
+#print(f"Dominant Eigenvalue: {dominant_eigenvalue}")
+print(f"Time Constant: {time_constant}")
+
 
 def lqr_contol(x):
-    return np.clip(-K @ x, -50, 50)
+    return np.clip(-K @ x, -45,45)
 
 
 #Exuction loop

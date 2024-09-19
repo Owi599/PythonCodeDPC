@@ -1,0 +1,2 @@
+* BSS138 N-Channel MOSFET
+.model BSS138 NMOS(VTO=1.3 KP=0.5 lambda=0.02 IS=1e-14 RG=9 RD=0.35 RS=0.6 Cgdmax=13p Cgs=27p Cjo=6p)
