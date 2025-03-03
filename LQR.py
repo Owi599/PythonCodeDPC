@@ -79,14 +79,14 @@ print(np.linalg.matrix_rank(ctrbl))
 Q = np.array(
     [
         [4000, 0, 0, 0, 0, 0],
-        [0, 15, 0, 0, 0, 0],
-        [0, 0, 15, 0, 0, 0],
-        [0, 0, 0, 1, 0, 0],
-        [0, 0, 0, 0, 1, 0],
-        [0, 0, 0, 0, 0, 1],
+        [0, 50, 0, 0, 0, 0],
+        [0, 0, 50, 0, 0, 0],
+        [0, 0, 0, 100, 0, 0],
+        [0, 0, 0, 0, 10, 0],
+        [0, 0, 0, 0, 0, 10],
     ]
 )
-R = np.array([[10]])
+R = np.array([[100]])
 
 P = solve_continuous_are(A, B, Q, R)
 K = np.linalg.inv(R) @ B.T @ P
@@ -105,7 +105,7 @@ print(f"Dominant Eigenvalue: {dominant_eigenvalue}")
 print(f"Time Constant: {time_constant}")
 
 def lqr_contol(x):
-    return np.clip(-K @ x, -11, +42)
+    return np.clip(-K @ x, -8.5, +8.5)
 
 # #Exuction loop
 while True:
@@ -117,7 +117,7 @@ while True:
         print(x0) 
         u = lqr_contol(x0)
         print(u)
-        time.sleep(0.1)
+        #time.sleep(0.1)
         UDP_CTRL.Send_Message("{:.3f}".format(u[0]))
 
     except KeyboardInterrupt:
