@@ -1,7 +1,7 @@
 import numpy as np  # library for nummeric operations
 import control as ct # control library 
 import matplotlib.pyplot as plt # visualization library 
-from scipy.linalg import solve_continuous_are # linearization library 
+from scipy.linalg import solve_continuous_are, solve_discrete_are # linearization library 
 import time # time library
 from com import UDP, TCP # importing self made class
 
@@ -70,8 +70,14 @@ F = np.array([[0], [0], [0], [1], [0], [0]])
 A = np.linalg.solve(M, N)
 B = np.linalg.solve(M, F)
 print(B)
-C = np.array([1, 0, 0, 0, 0, 0])
-D = 0
+C = np.array([[1, 0, 0, 0, 0, 0]])
+D = np.array([[0]])
+T_s = 0.3  # Sampling time in seconds
+
+# Create StateSpace object
+Sys_C = ct.StateSpace(A, B, C, D)
+Sys_D = ct.c2d(Sys_C, T_s)  # Convert to discrete system
+A_d, B_d, C_d, D_d = Sys_D.A, Sys_D.B, Sys_D.C, Sys_D.D  # Extract matrices
 
 ctrbl= ct.ctrb(A,B)
 print(np.linalg.matrix_rank(ctrbl))
@@ -89,23 +95,35 @@ Q = np.array(
 R = np.array([[100]])
 
 P = solve_continuous_are(A, B, Q, R)
+P_d = solve_discrete_are(A_d, B_d, Q, R)
 K = np.linalg.inv(R) @ B.T @ P
+K_d = np.linalg.inv(R + B_d.T @ P_d @ B_d) @ (B_d.T @ P_d @ A_d)
 print(K)
 A_cl = A - B @ K
-
+A_cl_d = A_d - B_d @ K_d
 # Compute the eigenvalues of A_cl
 eigenvalues = np.linalg.eigvals(A_cl)
+eigenvalues_d = np.linalg.eigvals(A_cl_d)
 
 # Find the dominant eigenvalue (the one with the smallest real part magnitude)
 dominant_eigenvalue = min(eigenvalues, key=lambda ev: abs(ev.real))
+dominant_eigenvalue_d = min(eigenvalues_d, key=lambda ev: abs(ev.real))
+
 # Calculate the time constant
 time_constant = 1 / abs(dominant_eigenvalue.real)
+time_constant_d = 1 / abs(dominant_eigenvalue_d.real)
 print(f"Eigenvalues: {eigenvalues}")
 print(f"Dominant Eigenvalue: {dominant_eigenvalue}")
 print(f"Time Constant: {time_constant}")
 
+print(f"Eigenvalues_d: {eigenvalues_d}")
+print(f"Dominant Eigenvalue_d: {dominant_eigenvalue_d}")
+print(f"Time Constant_d: {time_constant_d}")
 def lqr_contol(x):
     return np.clip(-K @ x, -8.5, +8.5)
+
+def lqr_contol_d(x_k):
+    return np.clip(-K_d @ x_k, -8.5, +8.5)
 
 # #Exuction loop
 while True:
@@ -115,13 +133,13 @@ while True:
         for element in lst:
             x0.append(float(element))
         print(x0) 
-        u = lqr_contol(x0)
+        u = lqr_contol_d(x0)
         print(u)
         #time.sleep(0.1)
         UDP_CTRL.Send_Message("{:.3f}".format(u[0]))
+        time.sleep(T_s/2)
 
     except KeyboardInterrupt:
         break
     except Exception as e:
         print("An error occurred:", str(e))
-    
