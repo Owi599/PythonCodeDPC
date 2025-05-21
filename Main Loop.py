@@ -19,7 +19,7 @@ ethPortControl = 5000
 UDPSENSORS = UDP(ethClient, ethPortSensor)
 UDPCONTROL = UDP(ethServer, ethPortControl)
 client = UDPSENSORS.create_client()
-server = UDPSENSORS.create_server()
+server = UDPCONTROL.create_server()
 # Pendulum Parameters
 pi = np.pi              # Constant for pi
 m_c = 0.232              # Mass of the cart
@@ -78,7 +78,8 @@ sys_C, sys_D = CONTROLLER.covert_continuous_to_discrete(A, B, C, D, t_s)
 
 K_d = CONTROLLER.compute_K_discrete(Q, R, sys_D)
 
-
+controlOutputCalculationTimeArray = []
+sendTimeArray = []
 # #Exuction loop
 try:
     while True:
@@ -87,11 +88,25 @@ try:
         for element in lst:
             x_0.append(float(element))
         print('Received Sensor Data:',x_0) 
-        u = CONTROLLER.compute_control_output_discrete(K_d, x_0)
+        u, controlOutputCalculationTime = CONTROLLER.compute_control_output_discrete(K_d, x_0)
         print('Computed Control Output:',u)
-        UDPCONTROL.send_data("{:.3f}".format(u[0]),client)
+        sendTime = UDPCONTROL.send_data("{:.3f}".format(u[0]),client)
+        controlOutputCalculationTimeArray.append(controlOutputCalculationTime)
+        sendTimeArray.append(sendTime)
         
 except KeyboardInterrupt:
     print("Execution interrupted by user.")
+    np.array(controlOutputCalculationTimeArray).tofile('controlOutputCalculationTimeArray.csv', sep=',')
+    np.array(sendTimeArray).tofile('sendTimeArray.csv', sep=',')
+    
 except Exception as e:
     print("An error occurred:", str(e))
+    np.array(controlOutputCalculationTimeArray).tofile('controlOutputCalculationTimeArray.csv', sep=',')
+    np.array(sendTimeArray).tofile('sendTimeArray.csv', sep=',')
+finally:
+    server.close()
+    client.close()
+    print("Sockets closed.")
+    np.array(controlOutputCalculationTimeArray).tofile('controlOutputCalculationTimeArray.csv', sep=',')
+    np.array(sendTimeArray).tofile('sendTimeArray.csv', sep=',')
+    print("Execution completed.")
